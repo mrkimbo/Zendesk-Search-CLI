@@ -1,0 +1,14 @@
+# dependencies
+node_modules
+
+# testing
+coverage
+reports
+.coverage
+
+# misc
+.DS_Store
+.env
+.idea
+.log
+.map
