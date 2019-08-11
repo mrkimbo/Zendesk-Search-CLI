@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/index.js --debug",
+    "debug": "node src/index.js --debug",
     "test": "jest",
     "lint": "prettier --config .prettierrc --write \"src/**/*.js\""
   },
@@ -15,6 +16,8 @@
     "node": "^10"
   },
   "dependencies": {
+    "chalk": "^2.4.2",
+    "clear": "^0.1.0",
     "inquirer": "^6.5.0"
   },
   "devDependencies": {
