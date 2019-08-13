@@ -12,12 +12,13 @@ const programEvents = {
   exit: messages.EXIT
 };
 
-Object.entries(programEvents).forEach(([eventName, message]) => {
-  process.on(eventName, (err) => {
-    if (err && isDebug) {
-      console.error(err);
-    }
+module.exports = () =>
+  Object.entries(programEvents).forEach(([eventName, message]) => {
+    process.on(eventName, (err) => {
+      if (err && isDebug) {
+        console.error(err);
+      }
 
-    exit(`\n${message}\n\n`);
+      exit(`\n${message}\n\n`);
+    });
   });
-});

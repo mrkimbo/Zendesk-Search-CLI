@@ -1,37 +1,32 @@
-const parser = require('./parser');
+const Parser = require('./parser');
 const compare = require('./compare');
 
-let data;
+class Search {
+  init(rawData) {
+    const { maps, ...data } = Parser.parse(rawData);
+    this.data = data;
+    this.maps = maps;
+  }
 
-function reset() {
-  data = {};
-}
+  async search({ scope, field, query }) {
+    // optimised search by id:
+    if (field === '_id') {
+      return [this.maps[scope][query.toString()]];
+    }
 
-function init(rawData) {
-  reset();
-  data = parser(rawData);
-}
+    // long-hand value search
+    const collection = this.data[scope];
+    return collection.filter((item) => compare(item[field], query));
+  }
 
-async function search({ scope, field, query }) {
-  const collection = data[scope.toLowerCase()];
-  return collection.filter((item) => {
-    // exact match only
-    const value = item[field];
-    return !!value && value === query;
-  });
-}
-
-function getSearchableFields(model) {
-  try {
-    // risk here in case not all entries contain all available fields
-    return Object.keys(data[model.toLowerCase()][0]);
-  } catch (err) {
-    return [];
+  getFields(scope) {
+    try {
+      // risk here in case not all entries contain all available fields
+      return Object.keys(this.data[scope][0]);
+    } catch (err) {
+      return [];
+    }
   }
 }
 
-module.exports = {
-  init,
-  search,
-  getSearchableFields
-};
+module.exports = new Search();

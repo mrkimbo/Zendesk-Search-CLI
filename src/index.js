@@ -1,58 +1,49 @@
-const clearConsole = require('clear');
-const chalk = require('chalk');
 const inquirer = require('inquirer');
-const { questions, messages } = require('./strings');
+const input = require('./config/input');
 const engine = require('./search');
-const fetchData = require('./fetchData');
-require('./errors');
+const dataService = require('./service/data-service');
+const { clearScreen } = require('./util');
+const ui = require('./ui');
+require('./config/errors')();
 
-function clearScreen() {
-  clearConsole();
-  console.log(chalk.green('------------------'));
-  console.log(chalk.bold.green('  Zendesk Search'));
-  console.log(chalk.green('------------------'));
-}
-
-async function performSearch() {
-  const query = await gatherInput();
-  const results = await engine.search(query);
-  displayResults(query, results);
-
-  const { restart } = await inquirer.prompt(questions.restart);
-  if (restart) {
-    await performSearch();
-  }
-
-  // exit
-  process.exit(0);
-}
-
-async function gatherInput() {
-  clearScreen();
-  const { scope } = await inquirer.prompt(questions.search.scope);
-  const searchFields = engine.getSearchableFields(scope);
-  const { field } = await inquirer.prompt(questions.search.field(searchFields));
-  const { query } = await inquirer.prompt(questions.search.query);
-  return { scope, field, query };
-}
-
-function displayResults(query, results) {
-  clearScreen();
-  console.log(messages.SEARCH_QUERY(query));
-
+async function displayResults(query, results) {
   if (!results.length) {
-    console.log(messages.NO_RESULTS);
+    ui.displayEmptyResults(query);
     return;
   }
 
-  console.log(messages.RESULTS_HEADER(results.length));
+  let selectedResult;
+  if (results.length === 1) {
+    selectedResult = results[0];
+  } else {
+    const selectionId = await ui.displayResultsList(query, results);
+    selectedResult = results.find(({ _id }) => _id.toString() === selectionId);
+  }
 
-  // Pagination / Prompts to show associated data?
+  // Show result and ask user whether to display associated data or not
+  const { showAssociated } = await ui.displayResult(selectedResult);
+
+  if (showAssociated) {
+    const associatedData = await engine.getAssociatedData(query.scope, selectedResult);
+    ui.displayAssociatedData(associatedData);
+  }
 }
 
+async function performSearch() {
+  const query = await ui.gatherInput();
+  const results = await engine.search(query);
+  await displayResults(query, results);
+
+  const { restart } = await inquirer.prompt(input.restart);
+  if (restart) {
+    await performSearch();
+  }
+}
+
+// Main process
 async function main() {
   clearScreen();
-  const rawData = await fetchData();
+  const rawData = await dataService.load();
   await engine.init(rawData);
   await performSearch();
 }

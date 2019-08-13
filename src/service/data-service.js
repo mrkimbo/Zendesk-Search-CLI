@@ -1,7 +1,6 @@
-const { messages } = require('./strings');
-const { mockProcessTime } = require('./util');
+const { messages } = require('../config/strings');
 
-async function fetchData() {
+async function load() {
   console.log(messages.LOAD_START);
   return {
     organisations: require('../data/organizations'),
@@ -10,4 +9,6 @@ async function fetchData() {
   };
 }
 
-module.exports = mockProcessTime(fetchData);
+module.exports = {
+  load
+};

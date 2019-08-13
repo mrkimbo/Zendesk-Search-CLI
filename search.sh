@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-node ./src/index.js
+node ./src/index.js --debug
