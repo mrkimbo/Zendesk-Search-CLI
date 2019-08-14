@@ -27,7 +27,7 @@ module.exports = {
       {
         name: 'query',
         type: 'input',
-        default: 'geekfarm',
+        default: '',
         message: 'Query:'
       }
     ]
