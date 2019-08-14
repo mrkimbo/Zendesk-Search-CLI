@@ -6,7 +6,7 @@ const { clearScreen } = require('./util');
 const ui = require('./ui');
 require('./config/errors')();
 
-async function displayResults(query, results) {
+async function showResults(query, results) {
   if (!results.length) {
     ui.displayEmptyResults(query);
     return;
@@ -21,7 +21,7 @@ async function displayResults(query, results) {
   }
 
   // Show result and ask user whether to display associated data or not
-  const { showAssociated } = await ui.displayResult(selectedResult);
+  const { showAssociated } = await ui.displaySingleResult(selectedResult);
 
   if (showAssociated) {
     const associatedData = await engine.getAssociatedData(query.scope, selectedResult);
@@ -32,7 +32,7 @@ async function displayResults(query, results) {
 async function performSearch() {
   const query = await ui.gatherInput();
   const results = await engine.search(query);
-  await displayResults(query, results);
+  await showResults(query, results);
 
   const { restart } = await inquirer.prompt(input.restart);
   if (restart) {

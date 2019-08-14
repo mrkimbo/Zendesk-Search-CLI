@@ -3,20 +3,22 @@ const compare = require('./compare');
 
 class Search {
   init(rawData) {
-    const { maps, ...data } = Parser.parse(rawData);
+    const { maps, fields, ...data } = Parser.parse(rawData);
     this.data = data;
     this.maps = maps;
+    this.fields = fields;
   }
 
   async search({ scope, field, query }) {
-    // optimised search by id:
+    // use lookup tables for id searches:
     if (field === '_id') {
       return [this.maps[scope][query.toString()]];
     }
 
     // long-hand value search
     const collection = this.data[scope];
-    return collection.filter((item) => compare(item[field], query));
+    const dataType = this.fields[scope][field];
+    return collection.filter((item) => compare(dataType, item[field], query));
   }
 
   getFields(scope) {

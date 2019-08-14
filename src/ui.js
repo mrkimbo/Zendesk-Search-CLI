@@ -3,7 +3,7 @@ const chalk = require('chalk');
 const input = require('./config/input');
 const { messages } = require('./config/strings');
 const engine = require('./search');
-const { clearScreen, paginate } = require('./util');
+const { clearScreen, paginate, capitalise } = require('./util');
 
 const getResultItemTitle = ({ _id, name, subject }) => `${_id}: ${name || subject}`;
 const isNextPageSelection = (option) => option.includes('Next Page');
@@ -25,7 +25,7 @@ async function gatherInput() {
 }
 
 // Display a page of results with next/prev page options
-async function displayResultsPage(query, pages, idx) {
+async function displayPage(query, pages, idx) {
   const currentPage = pages[idx];
   clearScreen(messages.SEARCH_QUERY(query), messages.RESULTS_HEADER(idx, pages));
 
@@ -41,12 +41,14 @@ async function displayResultsPage(query, pages, idx) {
 }
 
 // Present user with paginated options until they select a result to view
-async function displayResultsIndex(query, pages) {
+async function displayResultsList(query, results) {
+  clearScreen(messages.SEARCH_QUERY(query));
+  const pages = paginate(results);
   let pageIndex = 0;
   let selectionId;
 
   do {
-    const { selection } = await displayResultsPage(query, pages, pageIndex);
+    const { selection } = await displayPage(query, pages, pageIndex);
     if (isNextPageSelection(selection)) {
       pageIndex++;
     } else if (isPrevPageSelection(selection)) {
@@ -58,19 +60,8 @@ async function displayResultsIndex(query, pages) {
   return selectionId;
 }
 
-async function displayResultsList(query, results) {
-  clearScreen(messages.SEARCH_QUERY(query));
-  const pages = paginate(results);
-  if (!pages.length) {
-    console.log(messages.NO_RESULTS);
-    return;
-  }
-
-  return displayResultsIndex(query, pages);
-}
-
 // Display selected result and option to show associated data
-async function displayResult(result) {
+async function displaySingleResult(result) {
   clearScreen();
   console.log(JSON.stringify(result, null, 2));
 
@@ -78,14 +69,14 @@ async function displayResult(result) {
 }
 
 function displayEmptyResults(query) {
-  // clearScreen(messages.SEARCH_QUERY(query));
+  clearScreen(messages.SEARCH_QUERY(query));
   console.log(messages.NO_RESULTS);
 }
 
 // Display associated data for given search result
 function displayAssociatedData(data) {
   Object.entries(data).forEach(([key, val]) => {
-    console.log(chalk.gray.bold(`\n${key}:`));
+    console.log(chalk.gray.bold(`\n${capitalise(key)}:`));
     val.map((str) => console.log(` - ${str}`));
   });
 
@@ -94,7 +85,7 @@ function displayAssociatedData(data) {
 
 module.exports = {
   gatherInput,
-  displayResult,
+  displaySingleResult,
   displayResultsList,
   displayEmptyResults,
   displayAssociatedData
